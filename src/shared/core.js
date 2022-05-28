@@ -9,6 +9,8 @@ export const colors = {
     tertiary: "#8800AA",
     tertiaryTransparency: (opacity) => `rgba(136,0,170,${opacity})`,
 
+    clear: 'transparent',
+
     white: "#ffffff",
     black: "#111111",
 
@@ -55,6 +57,36 @@ export const type = {
     h6: {
         fontSize: 8,
         fontWeight: 'bold',
+    },
+    heading: {
+        fontSize: 26,
+        fontWeight: 'bold',
+        textTransform: 'capitalize'
+    },
+    title: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        textTransform: 'capitalize'
+    },
+    subTitle: {
+        fontSize: 12,
+        fontWeight: 'bold',
+        color: colors.lightGray
+    },
+    largeText: {
+        fontSize: 20,
+    },
+    mediumText: {
+        fontSize: 16,
+    },
+    smallText: {
+        fontSize: 12,
+    },
+    capitalize: {
+        textTransform: 'capitalize'
+    },
+    uppercase: {
+        textTransform: 'uppercase'
     },
     icon: {
         xLarge: 36,

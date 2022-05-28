@@ -1,5 +1,6 @@
 import {useState, useEffect} from 'react';
 import {Text, View, Pressable, ActivityIndicator} from 'react-native';
+import MemberView from './MemberView';
 
 import {getMembers} from "../../services/api/members";
 
@@ -29,42 +30,7 @@ export default function MemberList(props) {
     }, [])
 
     function goToMember(id) {
-        console.log(`Go to member page by member id: ${id}`);
-    }
-
-    function MemberView(member) {
-        const {member_id, name, chores} = member;
-        const numberOfChores = Array.isArray(chores) ? chores.length : 1;
-        return (
-            <Pressable
-                onPress={() => goToMember(member_id)}
-                style={({pressed}) => [{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    height: 110,
-                    width: '30.3%',
-                    marginVertical: layout.margin / 4,
-                    marginHorizontal: '1.5%',
-                    backgroundColor: pressed ? colors.primaryTransparency(0.2) : colors.white,
-                    borderRadius: layout.margin / 3,
-                    ...Elevations[pressed ? 2 : 4]
-                }]}
-            >
-                <>
-                    <Text
-                        style={({pressed}) => [{
-                            fontSize: 16,
-                            fontWeight: 'bold',
-                            textTransform: 'capitalize',
-                            color: pressed ? color.white : color.textColor
-                        }]}
-                    >{name}</Text>
-                    <Text>{numberOfChores} chores</Text>
-                </>
-            </Pressable>
-        );
+        console.log(`Go to ${members.find(member => member.member_id === id).name}'s member page by member id: ${id}`);
     }
 
     return isLoading ? (
@@ -88,7 +54,7 @@ export default function MemberList(props) {
             }}
         >
             <Text style={{
-                ...type.h3,
+                ...type.title,
                 textAlign: 'center',
                 padding: layout.padding,
                 width: '100%',

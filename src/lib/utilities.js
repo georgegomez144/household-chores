@@ -1,5 +1,5 @@
-export default {
-    mysqlDate: date => {
-        return new Date(date).toISOString().slice(0, 10)
-    }
+import moment from 'moment';
+
+export const mysqlDate = date => {
+    return moment(date).format('YYYY-DD-MM');
 }

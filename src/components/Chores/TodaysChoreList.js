@@ -4,28 +4,55 @@ import ChoreItem from "./ChoreItem";
 
 import {getDay} from "../../services/api/days";
 
-import {type, colors, layout} from "../../shared/core";
+import {type, layout} from "../../shared/core";
 
-export default function TodaysChoresList() {
+export default function TodaysChoresList(props) {
+    const {
+        memberToFilterBy,
+        refreshRequested,
+        handleFinishedRefresh
+    } = props;
+
     const [isLoading, setLoading] = useState(true);
-    const [chores, setChores] = useState();
+    const [chores, setChores] = useState([]);
 
     const getTodaysChoresAsync = async () => {
         try {
             const today = new Date().getDay() + 1;
             const response = await getDay(today);
             const data = await response.json();
-            setChores(data.chores);
+            const choresData = data.chores.map(chore => {
+                return {
+                    ...chore,
+                    complete: chore.complete === '1'
+                }
+            });
+            setChores(choresData);
         } catch (e) {
             console.error(e);
         } finally {
             setLoading(false);
+            handleFinishedRefresh(false);
         }
     };
 
+    function filterChoresByMemberId(id) {
+        setLoading(true);
+        const filteredChores = chores.filter(chore => chore.member_id == id);
+        setChores(filteredChores);
+        setLoading(false);
+    }
+
     useEffect(() => {
+        if (refreshRequested) {
             getTodaysChoresAsync();
-    }, [])
+        }
+        if(memberToFilterBy) {
+            filterChoresByMemberId(memberToFilterBy);
+        } else {
+            getTodaysChoresAsync();
+        }
+    }, [refreshRequested, memberToFilterBy])
 
     return isLoading ? (
         <View
@@ -50,12 +77,12 @@ export default function TodaysChoresList() {
             }}
         >
             <Text style={{
-                ...type.h3,
+                ...type.title,
                 textAlign: 'center',
                 padding: layout.padding,
                 width: '100%',
             }}>Today's Chores:</Text>
-            {chores && chores.map(chore => <ChoreItem key={chore.chore_id} {...chore} />)}
+            {chores && chores.map((chore, index) => <ChoreItem key={`${chore.chore_id}_${chore.member_chore_day_id}`} {...chore} index={index}/>)}
         </View>
     );
 }

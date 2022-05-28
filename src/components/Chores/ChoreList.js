@@ -50,7 +50,7 @@ export default function ChoresList() {
             }}
         >
             <Text style={{
-                ...type.h3,
+                ...type.title,
                 textAlign: 'center',
                 padding: layout.padding,
                 width: '100%',
