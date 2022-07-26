@@ -8,7 +8,6 @@ import {type, layout} from "../../shared/core";
 
 export default function TodaysChoresList(props) {
     const {
-        memberToFilterBy,
         refreshRequested,
         handleFinishedRefresh
     } = props;
@@ -21,38 +20,25 @@ export default function TodaysChoresList(props) {
             const today = new Date().getDay() + 1;
             const response = await getDay(today);
             const data = await response.json();
-            const choresData = data.chores.map(chore => {
-                return {
-                    ...chore,
-                    complete: chore.complete === '1'
-                }
-            });
+            const choresData = data.chores.map((chore) => ({
+                ...chore,
+                complete: chore.complete === '1'
+            }));
             setChores(choresData);
         } catch (e) {
             console.error(e);
         } finally {
             setLoading(false);
-            handleFinishedRefresh(false);
+            handleFinishedRefresh();
         }
     };
 
-    function filterChoresByMemberId(id) {
-        setLoading(true);
-        const filteredChores = chores.filter(chore => chore.member_id == id);
-        setChores(filteredChores);
-        setLoading(false);
-    }
-
     useEffect(() => {
+        if (isLoading) getTodaysChoresAsync();
         if (refreshRequested) {
             getTodaysChoresAsync();
         }
-        if(memberToFilterBy) {
-            filterChoresByMemberId(memberToFilterBy);
-        } else {
-            getTodaysChoresAsync();
-        }
-    }, [refreshRequested, memberToFilterBy])
+    }, [refreshRequested])
 
     return isLoading ? (
         <View
@@ -82,7 +68,8 @@ export default function TodaysChoresList(props) {
                 padding: layout.padding,
                 width: '100%',
             }}>Today's Chores:</Text>
-            {chores && chores.map((chore, index) => <ChoreItem key={`${chore.chore_id}_${chore.member_chore_day_id}`} {...chore} index={index}/>)}
+            {chores && chores.map(chore => <ChoreItem
+                            key={`${chore.chore_id}_${chore.member_chore_day_id}`} {...chore}/>)}
         </View>
     );
 }

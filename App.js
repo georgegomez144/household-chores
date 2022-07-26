@@ -1,74 +1,78 @@
 import {useEffect, useState} from 'react'
 import {StatusBar} from 'expo-status-bar';
-import {Text, View, ScrollView, RefreshControl} from 'react-native';
+import {View, ActivityIndicator} from 'react-native';
+import {NavigationContainer} from '@react-navigation/native';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-import NavigationBar from "./src/components/NavigationBar";
-import TodaysChoresMembersList from './src/components/Members/TodaysChoresMembersList';
-import TodaysChoresList from "./src/components/Chores/TodaysChoreList";
+import {TopBar} from "./src/components/shared/TopBar";
+import {
+    FirstTimeLoadScreen,
+    PrivatePageToLoad
+} from './src/pages'
 
-import {type, colors, layout} from "./src/shared/core";
+import {colors, layout, type} from "./src/shared/core";
 
 export default function App() {
-    const [refreshing, setRefreshing] = useState(false);
-    const [memberId, setMemberId] = useState()
+    const [isLoading, setIsLoading] = useState(true);
+    const [isInitialized, setIsInitialized] = useState(false)
+    const [thisMember, setThisMember] = useState({});
 
-    function filterChoresByMemberId(id) {
-        setMemberId(id);
+    const getDeviceMember = async () => {
+        try {
+            const jsonString = await AsyncStorage.getItem('device-member');
+            const member = jsonString !== null ? JSON.parse(jsonString) : null;
+            if (member !== null) {
+                const {member_id, device_code, name, admin} = member;
+                setThisMember({
+                    member_id,
+                    name,
+                    device_code,
+                    admin,
+                });
+                setIsInitialized(true)
+            } else {
+                setIsInitialized(false)
+            }
+        } catch (e) {
+            console.error(e)
+        } finally {
+            setIsLoading(false);
+        }
     }
 
-    function onRefresh() {
-        setRefreshing(true);
-    }
-
-    function handleFinishedRefresh(status) {
-        setRefreshing(false);
+    const handleAllowAccess = () => {
+        setIsInitialized(true);
     }
 
     useEffect(() => {
-    }, [handleFinishedRefresh, filterChoresByMemberId])
+        getDeviceMember();
+    }, [])
 
     return (
         <View style={{
             flex: 1,
             backgroundColor: colors.backgroundColor
         }}>
-            <View
-                style={{
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    paddingHorizontal: layout.padding,
-                    marginTop: 40,
-                    height: 50,
-                    width: '100%',
-                }}
-            >
-                <Text style={{
-                    ...type.heading
-                }}>Household Chores</Text>
-            </View>
-            <ScrollView
-                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh}/>}
-                style={{flex: 1}}
-            >
-                <View style={{
-                    flex: 1,
-                    ...layout.center,
-                    paddingBottom: layout.margin * 5
-                }}>
-                    <TodaysChoresMembersList
-                        filterByMember={filterChoresByMemberId}
-                        refreshRequested={refreshing}
-                        handleFinishedRefresh={handleFinishedRefresh}
-                    />
-                    <TodaysChoresList
-                        memberToFilterBy={memberId}
-                        refreshRequested={refreshing}
-                        handleFinishedRefresh={handleFinishedRefresh}
-                    />
+            {isLoading ? (
+                <View
+                    style={{
+                        flex: 1,
+                        ...layout.center,
+                    }}
+                >
+                    <ActivityIndicator size="large" color={colors.tertiary} />
                 </View>
-            </ScrollView>
-            <NavigationBar />
+            ) : (
+                !isInitialized ? (
+                    <FirstTimeLoadScreen handleReloadApp={handleAllowAccess}/>
+                ) : (
+                    <NavigationContainer>
+                        <TopBar {...{ setIsLoading, setIsInitialized }} />
+                        <PrivatePageToLoad member={thisMember}/>
+
+                    </NavigationContainer>
+                )
+            )}
             <StatusBar style="auto" backgroundColor={colors.primary}/>
         </View>
     );

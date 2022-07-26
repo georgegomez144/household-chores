@@ -24,7 +24,7 @@ export default function ChoresList() {
     };
 
     useEffect(() => {
-            getChoresAsync();
+        if (isLoading) getChoresAsync();
     }, [])
 
     return isLoading ? (
@@ -55,7 +55,7 @@ export default function ChoresList() {
                 padding: layout.padding,
                 width: '100%',
             }}>Chores:</Text>
-            {chores && chores.map(chore => <ChoreItem key={chore.chore_id} {...chore} />)}
+            {chores && chores.map((chore, index) => <ChoreItem key={chore.chore_id} {...chore} interactive={false} editable index={index} />)}
         </View>
     );
 }

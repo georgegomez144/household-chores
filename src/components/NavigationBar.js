@@ -1,59 +1,129 @@
-import {useState} from 'react';
+import {useEffect, useState} from 'react';
 import {
-    NativeModules,
     View,
     Pressable,
     Animated
 } from 'react-native';
+import * as DEVICE from 'expo-device';
 import {Entypo} from '@expo/vector-icons';
 import Elevations from "react-native-elevation";
 
 import {colors, layout, type} from "../shared/core";
+import {getMembers} from "../services/api/members";
 
-const { UIManager } = NativeModules;
+const routes = [
+    {
+        key: 'link_dashboard',
+        link: '/dashboard',
+        text: 'Home',
+        icon: 'home',
+        page: 'Home'
+    },
+    {
+        key: 'link_schedule',
+        link: '/schedule',
+        text: 'Schedule',
+        icon: 'calendar',
+        page: 'Schedule'
+    },
+    {
+        key: 'empty-spacer',
+        empty: true
+    },
+    {
+        key: 'link_chores',
+        link: '/chores',
+        text: 'Chores',
+        icon: 'bucket',
+        page: 'Chores'
+    },
+    {
+        key: 'link_admin',
+        link: '/admin',
+        text: 'Admin',
+        icon: 'users',
+        page: 'Admin'
+    }
+];
 
-UIManager.setLayoutAnimationEnabledExperimental &&
-    UIManager.setLayoutAnimationEnabledExperimental(true);
+export default function NavigationBar({state, navigation}) {
 
+    const [isAdmin, setIsAdmin] = useState(false);
+    const [notLoaded, setNotLoaded] = useState(true);
 
-export default function NavigationBar() {
+    const deviceName = DEVICE.deviceName.replace(/\s/g, '_');
+    const device_identifier = `${deviceName}_${DEVICE.osBuildId}_${DEVICE.platformApiLevel}`
 
-    const [selected, setSelected] = useState('link_dashboard');
+    const currentPage = state.routes.find((route, index) => index === state.index);
+    // console.log(currentPage)
 
-    const routes = [
-        {
-            key: 'link_dashboard',
-            link: '/dashboard',
-            text: 'Home',
-            icon: 'home'
-        },
-        {
-            key: 'link_chores',
-            link: '/chores',
-            text: 'Chores',
-            icon: 'bucket'
-        },
-        {
-            key: 'link_schedule',
-            link: '/schedule',
-            text: 'Schedule',
-            icon: 'calendar'
-        },
-        {
-            key: 'link_settings',
-            link: '/settings',
-            text: 'Settings',
-            icon: 'cog'
+    const getMembersAsync = async () => {
+        try {
+            const response = await getMembers();
+            const data = await response.json();
+            const thisMember = Array.isArray(data) && data.find(({device_code}) => device_code === device_identifier)
+            const memberIsAdmin = thisMember.admin === "1";
+            setIsAdmin(memberIsAdmin)
+        } catch (e) {
+            console.error(e)
+        } finally {
+            // console.log(isAdmin);
+            setNotLoaded(false)
         }
-    ];
-
-    function goToPageStack(route) {
-        console.log({route});
-        setSelected((route.key));
     }
 
-    function isSelected(route) {
-        return selected === route.key;
+    useEffect(() => {
+        if (notLoaded) getMembersAsync();
+    }, [])
+
+    function goToPageStack(route, index) {
+        if (state.index !== index) navigation.navigate({name: route.page, merge: true});
+    }
+
+    function isSelected(index) {
+        // Only because of the spacer
+        return state.index === (index > 2 ? index - 1 : index);
+    }
+
+    const handleActionButton = () => {
+        switch (currentPage.name) {
+            case 'Admin':
+                alert("you're on the admin page");
+                break;
+            case 'Chores':
+                alert("you're on the chores page");
+                break;
+            case 'Schedule':
+                alert("you're on the schedule page");
+                break;
+            default:
+                alert('this is the default home page action');
+        }
+    }
+
+    function NavigationAddButton() {
+        return (
+            <View
+                style={{
+                    position: 'absolute',
+                    top: -30,
+                }}
+            >
+                <Pressable
+                    onPress={handleActionButton}
+                    style={{
+                        ...layout.center,
+                        backgroundColor: colors.tertiary,
+                        borderRadius: '50%',
+                        height: 60,
+                        width: 60,
+                        ...Elevations[6]
+                    }}
+                >
+                    <Entypo name="plus" size={type.icon.xLarge} color={colors.white}/>
+                </Pressable>
+            </View>
+        )
     }
 
     return (
@@ -73,10 +143,19 @@ export default function NavigationBar() {
                 ...Elevations[6]
             }}
         >
-            {routes.map(route => (
+            <NavigationAddButton/>
+            {routes.map((route, index) => isAdmin && route.empty ? (
+                <View
+                    key={route.key}
+                    style={{
+                        height: 50,
+                        width: 50
+                    }}
+                ></View>
+            ) : (
                 <Pressable
                     key={route.key}
-                    onPress={() => goToPageStack(route)}
+                    onPress={() => goToPageStack(route, index > 2 ? index - 1 : index)} // Only because of the spacer
                     style={{
                         display: 'flex',
                         flexDirection: 'column',
@@ -88,11 +167,11 @@ export default function NavigationBar() {
                     <Animated.View
                         style={{
                             ...layout.center,
-                            marginTop: isSelected(route) ? -layout.margin : layout.margin,
-                            backgroundColor: isSelected(route) ? colors.accent : colors.clear,
-                            minHeight: isSelected(route) && 50,
-                            minWidth: isSelected(route) && 50,
-                            borderRadius: isSelected(route) ? 50 : 0,
+                            marginTop: isSelected(index) ? -layout.margin : layout.margin,
+                            backgroundColor: isSelected(index) ? colors.accent : colors.clear,
+                            minHeight: isSelected(index) && 50,
+                            minWidth: isSelected(index) && 50,
+                            borderRadius: isSelected(index) ? 50 : 0,
                             ...Elevations[4]
                         }}
                     >
@@ -100,16 +179,16 @@ export default function NavigationBar() {
                             name={route.icon}
                             size={type.icon.medium}
                             color={isSelected(route) ? colors.white : colors.lightestGray}
-                            style={{...Elevations[isSelected(route) && 4]}}
+                            style={{...Elevations[isSelected(index) && 4]}}
                         />
                     </Animated.View>
                     <Animated.Text style={{
-                        color: isSelected(route) ? colors.white : colors.lightestGray,
+                        color: isSelected(index) ? colors.white : colors.lightestGray,
                         marginTop: layout.margin / 4,
-                        opacity: isSelected(route) ? 1 : 0,
+                        opacity: isSelected(index) ? 1 : 0,
                         ...type.uppercase,
                         ...type.smallText,
-                        ...Elevations[isSelected(route) && 4]
+                        ...Elevations[isSelected(index) && 4]
                     }}>{route.text}</Animated.Text>
                 </Pressable>
             ))}

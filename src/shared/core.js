@@ -3,10 +3,13 @@ export const colors = {
     textColor: "#1f1f1f",
 
     primary: "#0066EE",
+    primaryLight: "#0099EE",
     primaryTransparency: (opacity) => `rgba(0,102,238,${opacity})`,
     accent: "#FF9900",
     accentTransparency: (opacity) => `rgba(255,153,0,${opacity})`,
+    tertiaryLight: "#8833AA",
     tertiary: "#8800AA",
+    tertiaryDark: "#770066",
     tertiaryTransparency: (opacity) => `rgba(136,0,170,${opacity})`,
 
     clear: 'transparent',
@@ -30,6 +33,25 @@ export const layout = {
     center: {
         alignItems: 'center',
         justifyContent: 'center',
+    },
+    row: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    rowSB: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
+    rowSE: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-evenly',
+    },
+    rowSA: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-around',
     }
 }
 
@@ -55,7 +77,7 @@ export const type = {
         fontWeight: 'bold',
     },
     h6: {
-        fontSize: 8,
+        fontSize: 9,
         fontWeight: 'bold',
     },
     heading: {
